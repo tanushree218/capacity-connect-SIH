@@ -176,19 +176,19 @@ async def me(user=Depends(get_current_user)):
 # ---------------- DEPARTMENTS ----------------
 @api.get("/departments")
 async def list_departments():
-    return await db.departments.find({}, {"_id": 0}).to_list(1000)
+    return await db.departments.find({}, {"_id": 0}).limit(1000).to_list(1000)
 
 
 # ---------------- COMPETENCIES ----------------
 @api.get("/competencies")
 async def list_competencies():
-    return await db.competencies.find({}, {"_id": 0}).to_list(1000)
+    return await db.competencies.find({}, {"_id": 0}).limit(1000).to_list(1000)
 
 
 # ---------------- COURSES ----------------
 @api.get("/courses")
 async def list_courses():
-    courses = await db.courses.find({}, {"_id": 0}).to_list(1000)
+    courses = await db.courses.find({}, {"_id": 0}).limit(1000).to_list(1000)
     return courses
 
 
@@ -224,21 +224,43 @@ async def create_course(req: CourseCreate, user=Depends(require_role("admin", "t
 # ---------------- ENROLLMENTS ----------------
 @api.get("/enrollments/me")
 async def my_enrollments(user=Depends(get_current_user)):
-    enrolls = await db.enrollments.find({"employee_id": user["id"]}, {"_id": 0}).to_list(1000)
-    # attach course info
-    for e in enrolls:
-        c = await db.courses.find_one({"id": e["course_id"]}, {"_id": 0})
-        e["course"] = c
+    enrolls = await db.enrollments.find(
+        {"employee_id": user["id"]},
+        {"_id": 0},
+    ).limit(1000).to_list(1000)
+    course_ids = [enrollment["course_id"] for enrollment in enrolls]
+    courses = await db.courses.find(
+        {"id": {"$in": course_ids}},
+        {"_id": 0},
+    ).limit(1000).to_list(1000)
+    course_by_id = {course["id"]: course for course in courses}
+
+    for enrollment in enrolls:
+        enrollment["course"] = course_by_id.get(enrollment["course_id"])
+
     return enrolls
 
 
 @api.post("/enrollments/assign")
 async def assign_course(req: AssignReq, user=Depends(require_role("admin"))):
+    existing_enrollments = await db.enrollments.find(
+        {
+            "employee_id": {"$in": req.employee_ids},
+            "course_id": req.course_id,
+        },
+        {"_id": 0, "employee_id": 1},
+    ).limit(1000).to_list(1000)
+    existing_employee_ids = {
+        enrollment["employee_id"]
+        for enrollment in existing_enrollments
+    }
     created = []
+    notifications = []
+
     for emp_id in req.employee_ids:
-        existing = await db.enrollments.find_one({"employee_id": emp_id, "course_id": req.course_id})
-        if existing:
+        if emp_id in existing_employee_ids:
             continue
+
         enroll = {
             "id": gen_id(),
             "employee_id": emp_id,
@@ -251,18 +273,21 @@ async def assign_course(req: AssignReq, user=Depends(require_role("admin"))):
             "assigned_at": now_iso(),
             "completed_at": None,
         }
-        await db.enrollments.insert_one(enroll)
-        # notification
-        await db.notifications.insert_one({
+        created.append(enroll)
+
+        notifications.append({
             "id": gen_id(),
             "employee_id": emp_id,
-            "message": f"New training assigned to you. Please complete before the deadline.",
+            "message": "New training assigned to you. Please complete before the deadline.",
             "type": "assignment",
             "read": False,
             "created_at": now_iso(),
         })
-        enroll.pop("_id", None)
-        created.append(enroll)
+
+    if created:
+        await db.enrollments.insert_many([enrollment.copy() for enrollment in created])
+        await db.notifications.insert_many(notifications)
+
     return {"created": len(created), "enrollments": created}
 
 
@@ -412,10 +437,21 @@ async def gap_dashboard(department: Optional[str] = None):
     users_q = {"role": "employee"}
     if department:
         users_q["department"] = department
-    employees = await db.users.find(users_q, {"_id": 0, "password": 0}).to_list(10000)
-    comps = await db.competencies.find({}, {"_id": 0}).to_list(1000)
+    employees = await db.users.find(
+        users_q,
+        {"_id": 0, "password": 0},
+    ).limit(10000).to_list(10000)
+    comps = await db.competencies.find({}, {"_id": 0}).limit(1000).to_list(1000)
     emp_ids = [e["id"] for e in employees]
-    emp_comps = await db.employee_competencies.find({"employee_id": {"$in": emp_ids}}, {"_id": 0}).to_list(10000)
+    emp_comps = await db.employee_competencies.find(
+        {"employee_id": {"$in": emp_ids}},
+        {"_id": 0},
+    ).limit(10000).to_list(10000)
+    emp_comp_by_employee_and_competency = {
+        (employee_competency["employee_id"], employee_competency["competency_id"]):
+        employee_competency
+        for employee_competency in emp_comps
+    }
 
     # Aggregate gap per competency
     gap_by_comp: Dict[str, Dict[str, Any]] = {}
@@ -424,7 +460,7 @@ async def gap_dashboard(department: Optional[str] = None):
 
     for emp in employees:
         for c in comps:
-            ec = next((x for x in emp_comps if x["employee_id"] == emp["id"] and x["competency_id"] == c["id"]), None)
+            ec = emp_comp_by_employee_and_competency.get((emp["id"], c["id"]))
             if not ec:
                 continue
             current = ec.get("current_level", 0)
@@ -455,6 +491,67 @@ async def gap_dashboard(department: Optional[str] = None):
         })
     results.sort(key=lambda x: -x["affected_pct"])
     return {"total_employees": len(employees), "gaps": results}
+
+
+@api.get("/analytics/employee-dashboard")
+async def employee_dashboard(user=Depends(require_role("employee"))):
+    enrollments = await db.enrollments.find(
+        {"employee_id": user["id"]},
+        {"_id": 0},
+    ).to_list(1000)
+    course_ids = [enrollment["course_id"] for enrollment in enrollments]
+    courses = await db.courses.find(
+        {"id": {"$in": course_ids}},
+        {"_id": 0},
+    ).to_list(1000)
+    course_by_id = {course["id"]: course for course in courses}
+
+    for enrollment in enrollments:
+        enrollment["course"] = course_by_id.get(enrollment["course_id"])
+
+    certificates = await db.certificates.find(
+        {"employee_id": user["id"]},
+        {"_id": 0},
+    ).to_list(1000)
+    competency_data = await competency_profile(user["id"])
+    competency_rows = [
+        row
+        for row in competency_data["profile"]
+        if row["required_level"] > 0
+    ]
+    competency_scores = [
+        min(100, 100 * row["current_level"] / row["required_level"])
+        for row in competency_rows
+    ]
+    all_courses = await db.courses.find({}, {"_id": 0}).to_list(1000)
+    recommendations = rule_based_recommendations(
+        competency_data["profile"],
+        all_courses,
+    )
+    completed = sum(
+        enrollment["status"] == "completed"
+        for enrollment in enrollments
+    )
+    average_progress = round(
+        sum(enrollment.get("progress", 0) for enrollment in enrollments)
+        / max(len(enrollments), 1)
+    )
+
+    return {
+        "stats": {
+            "assigned": len(enrollments),
+            "completed": completed,
+            "certificates": len(certificates),
+            "average_progress": average_progress,
+            "competency_score": round(
+                sum(competency_scores) / max(len(competency_scores), 1)
+            ),
+        },
+        "enrollments": enrollments,
+        "certificates": certificates,
+        "recommendations": recommendations,
+        "competency": competency_data,
+    }
 
 
 @api.get("/analytics/admin-overview")

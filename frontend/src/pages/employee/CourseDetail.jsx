@@ -1,5 +1,5 @@
 import Layout from "@/components/Layout";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "@/lib/api";
 import { Card } from "@/components/ui/card";
@@ -20,16 +20,18 @@ export default function CourseDetail() {
   const [answers, setAnswers] = useState({});
   const [result, setResult] = useState(null);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     const [c, e] = await Promise.all([
       api.get(`/courses/${id}`),
       api.get("/enrollments/me"),
     ]);
     setCourse(c.data);
     setEnroll(e.data.find((x) => x.course_id === id));
-  };
+  }, [id]);
 
-  useEffect(() => { load(); }, [id]);
+  useEffect(() => {
+    load();
+  }, [load]);
 
   const enrollSelf = async () => {
     await api.post("/enrollments/self", { course_id: id });

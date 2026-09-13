@@ -15,28 +15,49 @@ export default function EmployeeDashboard() {
   const [certs, setCerts] = useState([]);
   const [recs, setRecs] = useState([]);
   const [comp, setComp] = useState(null);
+  const [stats, setStats] = useState(null);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    Promise.all([
-      api.get("/enrollments/me"),
-      api.get("/certificates/me"),
-      api.get("/recommendations/me"),
-      api.get("/competencies/me"),
-    ]).then(([e, c, r, cm]) => {
-      setEnrolls(e.data); setCerts(c.data);
-      setRecs(r.data.recommendations || []);
-      setComp(cm.data);
-    });
+    let isMounted = true;
+
+    api.get("/analytics/employee-dashboard")
+      .then(({ data }) => {
+        if (!isMounted) {
+          return;
+        }
+
+        setEnrolls(data.enrollments || []);
+        setCerts(data.certificates || []);
+        setRecs(data.recommendations || []);
+        setComp(data.competency || null);
+        setStats(data.stats || null);
+      })
+      .catch(() => {
+        if (isMounted) {
+          setError("Your learning dashboard could not be loaded. Please try again shortly.");
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
-  const assigned = enrolls.length;
-  const completed = enrolls.filter((e) => e.status === "completed").length;
-  const avgProg = assigned ? Math.round(enrolls.reduce((s, e) => s + (e.progress || 0), 0) / assigned) : 0;
+  const assigned = stats?.assigned ?? enrolls.length;
+  const completed = stats?.completed
+    ?? enrolls.filter((enrollment) => enrollment.status === "completed").length;
+  const avgProg = stats?.average_progress
+    ?? (assigned
+      ? Math.round(
+        enrolls.reduce((sum, enrollment) => sum + (enrollment.progress || 0), 0) / assigned
+      )
+      : 0);
   const compScore = comp ? (() => {
     const rows = comp.profile.filter((p) => p.required_level > 0);
     if (!rows.length) return 0;
     return Math.round(rows.reduce((s, p) => s + Math.min(100, 100 * p.current_level / p.required_level), 0) / rows.length);
-  })() : 0;
+  })() : (stats?.competency_score ?? 0);
 
   return (
     <Layout>
@@ -55,7 +76,11 @@ export default function EmployeeDashboard() {
             { l: "Progress", v: `${avgProg}%`, icon: Target, c: "text-[#1E3E62]" },
             { l: "Competency", v: `${compScore}%`, icon: Sparkles, c: "text-rose-600" },
           ].map((s) => (
-            <Card key={s.l} className="p-5">
+            <Card
+              key={s.l}
+              className="p-5"
+              data-testid={`employee-stat-${s.l.toLowerCase()}`}
+            >
               <div className="flex items-center justify-between">
                 <div className="text-xs uppercase tracking-widest text-slate-500 font-bold">{s.l}</div>
                 <s.icon size={16} className={s.c} />
@@ -65,15 +90,37 @@ export default function EmployeeDashboard() {
           ))}
         </div>
 
+        {error && (
+          <Card
+            className="border-rose-200 bg-rose-50 p-4 text-sm text-rose-700"
+            data-testid="employee-dashboard-error"
+          >
+            {error}
+          </Card>
+        )}
+
         <div className="grid lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-4">
             <div className="flex items-baseline justify-between">
               <h2 className="font-display text-xl font-bold text-[#0B192C]">Assigned Courses</h2>
-              <Link to="/catalog" className="text-xs uppercase tracking-widest text-[#008DDA] font-bold">Browse catalog →</Link>
+              <Link
+                to="/catalog"
+                className="text-xs uppercase tracking-widest text-[#008DDA] font-bold"
+                data-testid="employee-dashboard-browse-catalog-link"
+              >
+                Browse catalog →
+              </Link>
             </div>
             {enrolls.length === 0 && (
               <Card className="p-8 text-center text-slate-500">
-                No courses assigned yet. <Link to="/catalog" className="text-[#008DDA] font-semibold">Browse the catalog</Link>.
+                No courses assigned yet. {" "}
+                <Link
+                  to="/catalog"
+                  className="text-[#008DDA] font-semibold"
+                  data-testid="employee-dashboard-empty-catalog-link"
+                >
+                  Browse the catalog
+                </Link>.
               </Card>
             )}
             {enrolls.map((e) => (
@@ -126,7 +173,14 @@ export default function EmployeeDashboard() {
                 </div>
                 <div className="text-xs text-slate-600 mt-2">{r.reason}</div>
                 <Link to={`/course/${r.course.id}`}>
-                  <Button variant="link" size="sm" className="px-0 text-[#008DDA]">View course →</Button>
+                  <Button
+                    variant="link"
+                    size="sm"
+                    className="px-0 text-[#008DDA]"
+                    data-testid={`view-recommended-course-${r.course.id}`}
+                  >
+                    View course →
+                  </Button>
                 </Link>
               </Card>
             ))}

@@ -97,7 +97,14 @@ export default function Login() {
               <div className="text-xs uppercase tracking-widest text-slate-500 font-bold mb-3">SIH Demo · Quick Sign-in</div>
               <div className="grid grid-cols-2 gap-2">
                 {DEMO.map((d) => (
-                  <Button key={d.email} variant="outline" size="sm" onClick={() => quick(d.email)} className="text-xs justify-start border-slate-300" data-testid={`quick-${d.role.toLowerCase().split(' ')[0]}`}>
+                  <Button
+                    key={d.email}
+                    variant="outline"
+                    size="sm"
+                    onClick={() => quick(d.email)}
+                    className="text-xs justify-start border-slate-300"
+                    data-testid={`quick-${d.email.replace(/[^a-z0-9]+/g, "-")}`}
+                  >
                     {d.role}
                   </Button>
                 ))}
