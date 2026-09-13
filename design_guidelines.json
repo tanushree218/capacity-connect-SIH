@@ -1,0 +1,111 @@
+{
+  "project_title": "CAPACITY CONNECT — Workforce Capability Management System | Ministry of Earth Sciences (MoES)",
+  "problem_statement_id": "SIH26075",
+  "theme_strategy": {
+    "mode": "hybrid_adaptive",
+    "primary_theme": "Formal Government & Scientific Excellence",
+    "theme_description": "A high-precision, formal, and aesthetic portal designed for the Ministry of Earth Sciences (MoES), Government of India. Blends deep ocean blues, slate cyan, crisp ivory surfaces, and gold national emblem accents to project administrative authority, scientific expertise, and modern digital capability.",
+    "forbidden_colors": ["#7351B7", "#1B93A4"]
+  },
+  "typography": {
+    "heading_font": "Plus Jakarta Sans, sans-serif",
+    "body_font": "IBM Plex Sans, sans-serif",
+    "mono_font": "JetBrains Mono, monospace",
+    "font_imports": "@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');",
+    "hierarchy": {
+      "h1_hero": "text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight",
+      "h2_section": "text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100",
+      "h3_subsection": "text-lg sm:text-xl font-semibold text-slate-800 dark:text-slate-200",
+      "h4_card_title": "text-base sm:text-lg font-semibold text-slate-900 dark:text-white",
+      "body_regular": "text-sm sm:text-base font-normal text-slate-600 dark:text-slate-300 leading-relaxed",
+      "body_compact": "text-xs sm:text-sm font-normal text-slate-500 dark:text-slate-400",
+      "label_overline": "text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400"
+    }
+  },
+  "color_system": {
+    "archetype": "ARCHETYPE 4: SWISS & HIGH-CONTRAST + ARCHETYPE 1: EARTH & OCEAN (MoES Specialized)",
+    "palette": {
+      "moes_deep_navy": "#0B192C",
+      "moes_ocean_slate": "#1E3E62",
+      "moes_cyan_accent": "#008DDA",
+      "moes_gold_emblem": "#D4AF37",
+      "moes_warm_ivory": "#F8FAFC",
+      "moes_border_subtle": "#E2E8F0",
+      "status_colors": {
+        "meets_competency": {
+          "label": "Meets Standard (Green)",
+          "bg": "bg-emerald-50 dark:bg-emerald-950/40",
+          "text": "text-emerald-700 dark:text-emerald-300",
+          "border": "border-emerald-200 dark:border-emerald-800"
+        },
+        "small_gap": {
+          "label": "Small Gap / MED (Yellow/Amber)",
+          "bg": "bg-amber-50 dark:bg-amber-950/40",
+          "text": "text-amber-700 dark:text-amber-300",
+          "border": "border-amber-200 dark:border-amber-800"
+        },
+        "major_gap": {
+          "label": "Major Gap / HIGH (Red)",
+          "bg": "bg-rose-50 dark:bg-rose-950/40",
+          "text": "text-rose-700 dark:text-rose-300",
+          "border": "border-rose-200 dark:border-rose-800"
+        }
+      }
+    }
+  },
+  "layout_and_spacing": {
+    "grid_mode": "MODE B: High Density Grid (Analytics & Dashboard) + MODE A: Tetris Grid (Course Catalog & Competency Overview)",
+    "containers": "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8",
+    "card_padding": "p-5 sm:p-6",
+    "section_gap": "space-y-8 sm:space-y-10"
+  },
+  "image_urls": [
+    {
+      "category": "Hero Banner Satellite Earth Observation",
+      "url": "https://images.unsplash.com/photo-1708738793054-32b71e3fc822?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2NDJ8MHwxfHNlYXJjaHwzfHxvY2VhbiUyMHNhdGVsbGl0ZSUyMG1ldGVvcm9sb2d5JTIwc2NpZW50aXN0fGVufDB8fHx8MTc4Nzk4MzYyNHww&ixlib=rb-4.1.0&q=85",
+      "description": "Earth science satellite orbiting blue ocean - hero banner visual"
+    },
+    {
+      "category": "Ocean Modelling & Research Coastal Baseline",
+      "url": "https://images.unsplash.com/photo-1743660236233-9ce45485dca7?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjY2NzF8MHwxfHNlYXJjaHwzfHxpbmRpYW4lMjBvY2VhbiUyMGVhcnRoJTIwc2NpZW50aXN0fGVufDB8fHx8MTc4Nzk4MzYyNHww&ixlib=rb-4.1.0&q=85",
+      "description": "Indian Ocean research coastal baseline visual for Ocean Modelling courses"
+    },
+    {
+      "category": "Space & Climate Satellite Deep Orbit",
+      "url": "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2NDJ8MHwxfHNlYXJjaHwyfHxvY2VhbiUyMHNhdGVsbGl0ZSUyMG1ldGVvcm9sb2d5JTIwc2NpZW50aXN0fGVufDB8fHx8MTc4Nzk4MzYyNHww&ixlib=rb-4.1.0&q=85",
+      "description": "Deep orbital climate sensing visual for climate modelling module background"
+    }
+  ],
+  "component_guidelines": {
+    "header_nav": {
+      "style": "Government Emblem Header + Glassmorphism sub-nav",
+      "classes": "sticky top-0 z-50 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 text-white shadow-lg",
+      "requirements": "Must show Ministry of Earth Sciences emblem/title, User Role Switcher (Admin / Trainer / Employee) for fast demo evaluation, Notification Bell, and Quick Profile."
+    },
+    "competency_gap_dashboard": {
+      "killer_feature": "Competency Gap Breakdown (e.g., Ocean Modelling HIGH 42%, Data Analytics HIGH 38%, Python MED 21%)",
+      "visual_style": "High-impact analytical cards with Recharts bar/radar charts, color-coded priority badges, department breakdown filters, and quick action 'Assign Training'."
+    },
+    "certificates": {
+      "style": "Formal Government Certificate with Gold Seal & Scannable QR Verification Code",
+      "features": "Downloadable PDF / Print view, Unique Certificate ID, Verification URL page with status check."
+    },
+    "ai_recommendations": {
+      "style": "Intelligent Capability Matcher",
+      "features": "Card highlighting automated skill gap diagnosis, recommended learning path with estimated completion time and match confidence percentage."
+    }
+  },
+  "instructions_to_main_agent": [
+    "Implement clear role-based switching among Admin, Trainer, and Employee to allow seamless testing of all user journeys.",
+    "Ensure the Competency Gap Dashboard prominently displays the exact priority metrics like 'Ocean Modelling HIGH 42%', 'Data Analytics HIGH 38%', and 'Python MED 21%' with color-coded gap alerts.",
+    "Use Recharts for clear, high-density visualization in Admin and Employee analytics views.",
+    "Maintain high-contrast, formal government aesthetic with subtle dark navy accents (#0B192C), crisp slate cards, and gold government badges.",
+    "Add test IDs (`data-testid`) to all critical interactive elements, buttons, forms, and tabs."
+  ],
+  "UNIVERSAL GUIDELINES FOR MAIN AGENT": {
+    "data_testid_rule": "ALL interactive components, buttons, inputs, tabs, modal triggers MUST have explicit kebab-case data-testid attributes.",
+    "no_transparent_overlays": "Header, dropdowns, dialogs, and navigation popovers MUST have opaque or backdrop-blurred solid backgrounds to prevent text collision.",
+    "spacing_philosophy": "Use generous internal card padding (p-5 or p-6) and clear gap scales (gap-6 or gap-8).",
+    "toast_notifications": "Use sonner for notifications (located in src/components/ui/sonner.js)."
+  }
+}
